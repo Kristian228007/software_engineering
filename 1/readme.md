@@ -60,7 +60,7 @@
 
 ### 1. System Context (C1)
 
-![System Context Diagram](diagrams/system-context.jpg)
+![System Context Diagram](diagrams/system-context.JPG)
 
 **Описание:** Диаграмма контекста системы показывает высокоуровневое представление системы управления рецептами и её взаимодействие с внешними акторами и системами.
 
@@ -81,7 +81,7 @@
 
 ### 2. Container (C2)
 
-![Container Diagram](diagrams/container.jpg)
+![Container Diagram](diagrams/container.JPG)
 
 **Описание:** Диаграмма контейнеров раскрывает внутреннюю структуру системы управления рецептами, показывая основные технологические компоненты и их взаимодействие.
 
@@ -113,7 +113,7 @@
 
 ### 3. Dynamic (Создание рецепта)
 
-![Dynamic Diagram](diagrams/dynamic.jpg)
+![Dynamic Diagram](diagrams/dynamic.JPG)
 
 **Описание:** Диаграмма динамики показывает последовательность взаимодействия между контейнерами при создании нового рецепта с ингредиентами - ключевом сценарии использования системы.
 
