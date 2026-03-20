@@ -1,0 +1,767 @@
+{
+  "info": {
+    "_postman_id": "b2f617f5-7f98-41e5-985a-e020cba2db5d",
+    "name": "Recipe Management API",
+    "description": "Postman collection for Recipe Management API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "31109123"
+  },
+  "item": [
+    {
+      "name": "Users",
+      "item": [
+        {
+          "name": "Create user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201 or 409', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+                  "});",
+                  "",
+                  "const json = pm.response.json();",
+                  "",
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('Response has id and login', function () {",
+                  "        pm.expect(json).to.have.property('id');",
+                  "        pm.expect(json).to.have.property('login');",
+                  "        pm.expect(json.login).to.eql(pm.collectionVariables.get('login'));",
+                  "    });",
+                  "    pm.collectionVariables.set('userId', json.id);",
+                  "}",
+                  "",
+                  "if (pm.response.code === 409) {",
+                  "    pm.test('Conflict response has error', function () {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"login\": \"{{login}}\",\n    \"password\": \"{{password}}\",\n    \"firstName\": \"Ivan\",\n    \"lastName\": \"Petrov\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get all users",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Response is array', function () {",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});",
+                  "pm.test('Array contains created user login', function () {",
+                  "    const login = pm.collectionVariables.get('login');",
+                  "    const found = json.some(u => u.login === login);",
+                  "    pm.expect(found).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get user by login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Response contains requested login', function () {",
+                  "    pm.expect(json).to.have.property('login');",
+                  "    pm.expect(json.login).to.eql(pm.collectionVariables.get('login'));",
+                  "});",
+                  "pm.test('Response contains id', function () {",
+                  "    pm.expect(json).to.have.property('id');",
+                  "    pm.collectionVariables.set('userId', json.id);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{login}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{login}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get user by login - not found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Not found response has error', function () {",
+                  "    pm.expect(json).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/not-existing-login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "not-existing-login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Response contains token', function () {",
+                  "    pm.expect(json).to.have.property('token');",
+                  "    pm.expect(json.token).to.be.a('string');",
+                  "    pm.expect(json.token.length).to.be.greaterThan(0);",
+                  "});",
+                  "pm.collectionVariables.set('token', json.token);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"login\": \"{{login}}\",\n    \"password\": \"{{password}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Recipes",
+      "item": [
+        {
+          "name": "Create recipe",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201 or 409', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('Recipe created successfully', function () {",
+                  "        pm.expect(json).to.have.property('id');",
+                  "        pm.expect(json).to.have.property('title', 'Pasta Carbonara');",
+                  "        pm.expect(json).to.have.property('description', 'Classic Italian pasta with eggs and bacon');",
+                  "        pm.expect(json).to.have.property('authorId');",
+                  "        pm.expect(json).to.have.property('ingredients');",
+                  "        pm.expect(json.ingredients).to.be.an('array');",
+                  "    });",
+                  "    pm.collectionVariables.set('recipeId', json.id);",
+                  "}",
+                  "if (pm.response.code === 409) {",
+                  "    pm.test('Conflict response has error', function () {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Pasta Carbonara\",\n    \"description\": \"Classic Italian pasta with eggs and bacon\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recipes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recipes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create recipe - unauthorized",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Unauthorized response has error', function () {",
+                  "    pm.expect(json).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"title\": \"Unauthorized Recipe\",\n    \"description\": \"Should fail without token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recipes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recipes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List recipes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Response is array', function () {",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});",
+                  "pm.test('Recipes contain Pasta Carbonara', function () {",
+                  "    const found = json.some(r => r.title === 'Pasta Carbonara');",
+                  "    pm.expect(found).to.eql(true);",
+                  "});",
+                  "const recipe = json.find(r => r.title === 'Pasta Carbonara');",
+                  "if (recipe && recipe.id) {",
+                  "    pm.collectionVariables.set('recipeId', recipe.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recipes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recipes"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get recipes by user",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Response is array', function () {",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});",
+                  "pm.test('Each recipe belongs to user', function () {",
+                  "    const userId = pm.collectionVariables.get('userId');",
+                  "    json.forEach(recipe => {",
+                  "        pm.expect(recipe.authorId).to.eql(userId);",
+                  "    });",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/users/{{userId}}/recipes",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "users",
+                "{{userId}}",
+                "recipes"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ingredients",
+      "item": [
+        {
+          "name": "Add ingredient",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 201 or 409', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([201, 409]);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "if (pm.response.code === 201) {",
+                  "    pm.test('Ingredient created', function () {",
+                  "        pm.expect(json).to.have.property('id');",
+                  "        pm.expect(json).to.have.property('name', 'Spaghetti');",
+                  "        pm.expect(json).to.have.property('amount', '200');",
+                  "        pm.expect(json).to.have.property('unit', 'g');",
+                  "    });",
+                  "}",
+                  "if (pm.response.code === 409) {",
+                  "    pm.test('Duplicate ingredient returns conflict', function () {",
+                  "        pm.expect(json).to.have.property('error');",
+                  "    });",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Spaghetti\",\n    \"amount\": \"200\",\n    \"unit\": \"g\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recipes/{{recipeId}}/ingredients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recipes",
+                "{{recipeId}}",
+                "ingredients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add ingredient duplicate different case",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 409', function () {",
+                  "    pm.response.to.have.status(409);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Error exists', function () {",
+                  "    pm.expect(json).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"spaghetti\",\n    \"amount\": \"300\",\n    \"unit\": \"g\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recipes/{{recipeId}}/ingredients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recipes",
+                "{{recipeId}}",
+                "ingredients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Add ingredient - unauthorized",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status is 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Unauthorized response has error', function () {",
+                  "    pm.expect(json).to.have.property('error');",
+                  "});"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Bacon\",\n    \"amount\": \"100\",\n    \"unit\": \"g\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recipes/{{recipeId}}/ingredients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recipes",
+                "{{recipeId}}",
+                "ingredients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get ingredients",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Response is array', function () {",
+                  "    pm.expect(json).to.be.an('array');",
+                  "});",
+                  "pm.test('Ingredients contain Spaghetti ignoring case', function () {",
+                  "    const found = json.some(i => i.name.toLowerCase() === 'spaghetti');",
+                  "    pm.expect(found).to.eql(true);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recipes/{{recipeId}}/ingredients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recipes",
+                "{{recipeId}}",
+                "ingredients"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get ingredients - recipe not found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 404', function () {",
+                  "    pm.response.to.have.status(404);",
+                  "});",
+                  "const json = pm.response.json();",
+                  "pm.test('Not found response has error', function () {",
+                  "    pm.expect(json).to.have.property('error');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/recipes/00000000-0000-0000-0000-000000000000/ingredients",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "recipes",
+                "00000000-0000-0000-0000-000000000000",
+                "ingredients"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "login",
+      "value": "ivan"
+    },
+    {
+      "key": "password",
+      "value": "qwerty123"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "userId",
+      "value": ""
+    },
+    {
+      "key": "recipeId",
+      "value": ""
+    }
+  ]
+}

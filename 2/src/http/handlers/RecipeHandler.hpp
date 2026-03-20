@@ -1,0 +1,84 @@
+#pragma once
+#include "../BaseHandler.hpp"
+
+#include "../../service/RecipeService.hpp"
+
+#include "../../auth/JwtMiddleware.hpp"
+
+class RecipeHandler : public BaseHandler
+{
+private:
+    RecipeService &service;
+    JwtMiddleware &auth;
+
+public:
+    RecipeHandler(RecipeService &s, JwtMiddleware &a)
+        : service(s), auth(a) {}
+
+protected:
+    void handle(Poco::Net::HTTPServerRequest &req,
+                Poco::Net::HTTPServerResponse &res) override
+    {
+        if (req.getMethod() == "POST")
+        {
+            auto userId = auth.requireUser(req);
+
+            Poco::JSON::Parser parser;
+            auto json = parser.parse(req.stream()).extract<Poco::JSON::Object::Ptr>();
+
+            CreateRecipeRequest dto;
+            dto.title = json->getValue<std::string>("title");
+            dto.description = json->getValue<std::string>("description");
+
+            auto recipe = service.createRecipe(userId, dto);
+
+            Poco::JSON::Object resp;
+            resp.set("id", recipe.id);
+            resp.set("title", recipe.title);
+            resp.set("description", recipe.description);
+            resp.set("authorId", recipe.authorId);
+            resp.set("ingredients", recipe.ingredients);
+
+            res.setStatus(Poco::Net::HTTPResponse::HTTP_CREATED);
+            res.setContentType("application/json");
+            resp.stringify(res.send());
+            return;
+        }
+
+        if (req.getMethod() == "GET")
+        {
+            auto recipes = service.listRecipes();
+            Poco::JSON::Array arr;
+
+            for (auto &r : recipes)
+            {
+                Poco::JSON::Object resp;
+                resp.set("id", r.id);
+                resp.set("title", r.title);
+                resp.set("description", r.description);
+                resp.set("authorId", r.authorId);
+
+                Poco::JSON::Array ingredientsArr;
+                for (const auto &ing : r.ingredients)
+                {
+                    Poco::JSON::Object ingObj;
+                    ingObj.set("id", ing.id);
+                    ingObj.set("name", ing.name);
+                    ingObj.set("amount", ing.amount);
+                    ingObj.set("unit", ing.unit);
+                    ingredientsArr.add(ingObj);
+                }
+
+                resp.set("ingredients", ingredientsArr);
+                arr.add(resp);
+            }
+
+            res.setStatus(Poco::Net::HTTPResponse::HTTP_OK);
+            res.setContentType("application/json");
+            arr.stringify(res.send());
+            return;
+        }
+
+        res.setStatus(Poco::Net::HTTPResponse::HTTP_METHOD_NOT_ALLOWED);
+    }
+};
