@@ -8,6 +8,7 @@ REST API сервис для управления рецептами.
 - POCO
 - JWT
 - Docker
+- PostgreSQL
 
 ## Запуск
 
@@ -20,7 +21,3 @@ http://localhost:8080/swagger.yaml
 ## API docs:
 
 http://localhost:8080/docs
-
-### Postman
-
-Коллекция для postman с тестами в файле 'Recipe-Management-API.postman-collection.json'

@@ -1,6 +1,5 @@
 #pragma once
 #include <stdexcept>
-
 #include <Poco/UUIDGenerator.h>
 
 #include "../repository/RecipeRepository.hpp"
@@ -26,14 +25,15 @@ public:
     {
         auto existing = recipeRepo.findByTitle(dto.title);
         if (!existing.empty())
-            throw ConflictException("Recipe already exists");
+            throw ConflictException("Recipe with this title already exists");
 
         Recipe r;
         r.title = dto.title;
         r.description = dto.description;
         r.authorId = authorId;
 
-        return *recipeRepo.create(r);
+        auto created = recipeRepo.create(r);
+        return *created;
     }
 
     std::vector<Recipe> listRecipes()
@@ -78,21 +78,25 @@ public:
         if (!recipe)
             throw NotFoundException("Recipe not found");
 
-        for (const auto &ingredient : recipe->ingredients)
-        {
-            if (ingredient.name == dto.name)
-                throw ConflictException("Ingredient already exists");
-        }
+        if (recipeRepo.ingredientExists(recipe_id, dto.name))
+            throw ConflictException("Ingredient already exists in this recipe");
 
         Ingredient i;
-        i.id = Poco::UUIDGenerator::defaultGenerator()
-                   .createRandom()
-                   .toString();
         i.name = dto.name;
         i.amount = dto.amount;
         i.unit = dto.unit;
 
-        recipe->ingredients.push_back(i);
+        recipeRepo.addIngredient(recipe_id, i);
+
+        auto ingredients = recipeRepo.findIngredientsByRecipeId(recipe_id);
+        for (const auto &ing : ingredients)
+        {
+            if (ing.name == dto.name)
+            {
+                return ing;
+            }
+        }
+
         return i;
     }
 
@@ -100,8 +104,8 @@ public:
     {
         auto recipe = recipeRepo.findById(recipe_id);
         if (!recipe)
-            throw NotFoundException();
+            throw NotFoundException("Recipe not found");
 
-        return recipe->ingredients;
+        return recipeRepo.findIngredientsByRecipeId(recipe_id);
     }
 };

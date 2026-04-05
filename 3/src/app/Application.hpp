@@ -1,6 +1,7 @@
 #pragma once
 #include <Poco/Util/ServerApplication.h>
 #include <Poco/Net/HTTPServer.h>
+#include <Poco/Environment.h>
 
 #include "../repository/UserRepository.hpp"
 #include "../repository/RecipeRepository.hpp"
@@ -18,8 +19,20 @@ class ServerApplication : public Poco::Util::ServerApplication
 protected:
     int main(const std::vector<std::string> &args) override
     {
-        UserRepository userRepo;
-        RecipeRepository recipeRepo;
+        std::string dbHost = Poco::Environment::get("DB_HOST", "localhost");
+        std::string dbPort = Poco::Environment::get("DB_PORT", "5432");
+        std::string dbUser = Poco::Environment::get("DB_USER", "recipe_user");
+        std::string dbPassword = Poco::Environment::get("DB_PASSWORD", "recipe_pass");
+        std::string dbName = Poco::Environment::get("DB_NAME", "recipe_db");
+
+        std::string connectionString = "host=" + dbHost +
+                                       " port=" + dbPort +
+                                       " user=" + dbUser +
+                                       " password=" + dbPassword +
+                                       " dbname=" + dbName;
+
+        UserRepository userRepo(connectionString);
+        RecipeRepository recipeRepo(connectionString);
 
         UserService userService(userRepo);
         RecipeService recipeService(recipeRepo, userRepo);

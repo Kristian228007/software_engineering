@@ -1,9 +1,43 @@
+version: "3.8"
+
 services:
-    poco_server:
+    postgres:
+        image: postgres:15
+        container_name: recipe_postgres
+        environment:
+            POSTGRES_USER: recipe_user
+            POSTGRES_PASSWORD: recipe_pass
+            POSTGRES_DB: recipe_db
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+            - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+            - ./data.sql:/docker-entrypoint-initdb.d/02-data.sql
+        networks:
+            - recipe_network
+
+    app:
         build: .
+        container_name: recipe_app
         ports:
             - "8080:8080"
+        depends_on:
+            - postgres
         environment:
-            PORT: 8080
-            LOG_LEVEL: information
-            JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
+            DB_HOST: postgres
+            DB_PORT: 5432
+            DB_USER: recipe_user
+            DB_PASSWORD: recipe_pass
+            DB_NAME: recipe_db
+        networks:
+            - recipe_network
+        volumes:
+            - ./swagger.yaml:/app/swagger.yaml
+
+networks:
+    recipe_network:
+        driver: bridge
+
+volumes:
+    postgres_data:

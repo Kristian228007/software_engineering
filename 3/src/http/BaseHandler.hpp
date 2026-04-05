@@ -59,6 +59,8 @@ public:
         }
         catch (const std::exception &e)
         {
+            std::cerr << "ERROR: " << e.what() << std::endl;
+
             sendError(res,
                       Poco::Net::HTTPResponse::HTTP_INTERNAL_SERVER_ERROR,
                       e.what());

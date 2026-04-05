@@ -1,23 +1,28 @@
-cmake_minimum_required(VERSION 3.16)
-project(poco_server VERSION 1.0.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.10)
+project(RecipeAPI)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Poco REQUIRED COMPONENTS Net Foundation Util Prometheus JWT)
+find_package(Poco REQUIRED Foundation Net Util JSON Data DataPostgreSQL JWT)
 
-add_executable(poco_server
+include_directories(${POCO_INCLUDE_DIRS})
+include_directories(${CMAKE_SOURCE_DIR}/src)
+
+set(SOURCES
     src/main.cpp
 )
 
-target_include_directories(poco_server PRIVATE ${CMAKE_SOURCE_DIR}/src)
+add_executable(server ${SOURCES})
 
-target_link_libraries(poco_server
-    PRIVATE
-        Poco::Net
-        Poco::Foundation
-        Poco::Util
-        Poco::Prometheus
-        Poco::JWT
+target_link_libraries(server
+    ${POCO_LIBRARIES}
+    PocoFoundation
+    PocoNet
+    PocoUtil
+    PocoJSON
+    PocoData
+    PocoDataPostgreSQL
+    PocoJWT
+    pq
 )
-
-install(TARGETS poco_server DESTINATION bin)
