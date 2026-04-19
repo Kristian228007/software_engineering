@@ -12,7 +12,7 @@ protected:
     void handle(Poco::Net::HTTPServerRequest &req,
                 Poco::Net::HTTPServerResponse &res) override
     {
-        std::ifstream file("/app/swagger.yaml");
+        std::ifstream file("/usr/local/bin/swagger.yaml");
         if (!file)
             throw NotFoundException("Swagger not found");
 

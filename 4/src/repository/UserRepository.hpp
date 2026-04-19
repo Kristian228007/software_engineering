@@ -66,6 +66,27 @@ public:
         return std::nullopt;
     }
 
+    std::optional<User> findById(const std::string &id)
+    {
+        std::lock_guard<std::mutex> lock(mutex_);
+
+        std::string idCopy = id;
+
+        Poco::Data::Statement select(session_);
+        User user;
+        select << "SELECT id, login, password_hash, first_name, last_name FROM users WHERE id = $1",
+            Poco::Data::Keywords::into(user.id),
+            Poco::Data::Keywords::into(user.login),
+            Poco::Data::Keywords::into(user.password_hash),
+            Poco::Data::Keywords::into(user.firstName),
+            Poco::Data::Keywords::into(user.lastName),
+            Poco::Data::Keywords::use(idCopy),
+            Poco::Data::Keywords::range(0, 1);
+        if (select.execute())
+            return user;
+        return std::nullopt;
+    }
+
     std::vector<User> findAll()
     {
         std::lock_guard<std::mutex> lock(mutex_);

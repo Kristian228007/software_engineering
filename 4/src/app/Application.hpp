@@ -4,14 +4,13 @@
 #include <Poco/Environment.h>
 
 #include "../repository/UserRepository.hpp"
-#include "../repository/RecipeRepository.hpp"
+#include "../repository/RecipeRepositoryMongo.hpp"
 
 #include "../service/UserService.hpp"
 #include "../service/RecipeService.hpp"
 #include "../service/AuthService.hpp"
 
 #include "../auth/JwtMiddleware.hpp"
-
 #include "../http/Router.hpp"
 
 class ServerApplication : public Poco::Util::ServerApplication
@@ -19,6 +18,7 @@ class ServerApplication : public Poco::Util::ServerApplication
 protected:
     int main(const std::vector<std::string> &args) override
     {
+        // ================= POSTGRES (users) =================
         std::string dbHost = Poco::Environment::get("DB_HOST", "localhost");
         std::string dbPort = Poco::Environment::get("DB_PORT", "5432");
         std::string dbUser = Poco::Environment::get("DB_USER", "recipe_user");
@@ -32,14 +32,19 @@ protected:
                                        " dbname=" + dbName;
 
         UserRepository userRepo(connectionString);
-        RecipeRepository recipeRepo(connectionString);
 
+        // ================= MONGO (recipes) =================
+        RecipeRepository recipeRepo;
+
+        // ================= SERVICES =================
         UserService userService(userRepo);
         RecipeService recipeService(recipeRepo, userRepo);
         AuthService authService(userRepo);
         JwtMiddleware jwt(authService);
 
+        // ================= SERVER =================
         Poco::Net::ServerSocket socket(8080);
+
         Poco::Net::HTTPServer server(
             new Router(userService, recipeService, authService, jwt),
             socket,
