@@ -1,0 +1,77 @@
+version: "3.8"
+
+services:
+    postgres:
+        image: postgres:15
+        container_name: recipe_postgres
+        environment:
+            POSTGRES_USER: recipe_user
+            POSTGRES_PASSWORD: recipe_pass
+            POSTGRES_DB: recipe_db
+        ports:
+            - "5432:5432"
+        volumes:
+            - postgres_data:/var/lib/postgresql/data
+            - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+            - ./data.sql:/docker-entrypoint-initdb.d/02-data.sql
+        networks:
+            - recipe_network
+        healthcheck:
+            test: ["CMD-SHELL", "pg_isready -U recipe_user -d recipe_db"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    mongodb:
+        image: mongo:6
+        container_name: recipe_mongodb
+        ports:
+            - "27017:27017"
+        volumes:
+            - mongodb_data:/data/db
+        networks:
+            - recipe_network
+        healthcheck:
+            test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+            interval: 5s
+            timeout: 5s
+            retries: 5
+
+    app:
+        build: .
+        container_name: recipe_app
+        ports:
+            - "8080:8080"
+        depends_on:
+            postgres:
+                condition: service_healthy
+            mongodb:
+                condition: service_healthy
+        environment:
+            DB_HOST: postgres
+            DB_PORT: 5432
+            DB_USER: recipe_user
+            DB_PASSWORD: recipe_pass
+            DB_NAME: recipe_db
+            MONGO_HOST: mongodb
+            MONGO_PORT: 27017
+            MONGO_DB: recipe_db
+        networks:
+            - recipe_network
+        volumes:
+            - ./swagger.yaml:/app/swagger.yaml
+        restart: always
+        deploy:
+            restart_policy:
+                condition: on-failure
+                delay: 5s
+                max_attempts: 5
+                window: 60s
+
+networks:
+    recipe_network:
+        driver: bridge
+
+volumes:
+    postgres_data:
+    mongodb_data:
