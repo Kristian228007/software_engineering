@@ -11,15 +11,19 @@
 #include "../http/exceptions/NotFoundException.hpp"
 #include "../http/exceptions/ConflictException.hpp"
 
+#include "../cache/CacheService.hpp"
+#include "../utils/JsonUtils.hpp"
+
 class RecipeService
 {
 private:
     RecipeRepository &recipeRepo;
     UserRepository &userRepo;
+    CacheService &cache;
 
 public:
-    RecipeService(RecipeRepository &r, UserRepository &u)
-        : recipeRepo(r), userRepo(u) {}
+    RecipeService(RecipeRepository &r, UserRepository &u, CacheService &c)
+        : recipeRepo(r), userRepo(u), cache(c) {}
 
     Recipe createRecipe(const std::string authorId, const CreateRecipeRequest &dto)
     {
@@ -33,17 +37,27 @@ public:
         r.authorId = authorId;
 
         auto created = recipeRepo.create(r);
+
+        cache.del("recipes:all");
         return *created;
     }
 
     std::vector<Recipe> listRecipes()
     {
-        auto ptrs = recipeRepo.getAll();
-        std::vector<Recipe> result;
-        result.reserve(ptrs.size());
+        auto cached = cache.get("recipes:all");
 
+        if (cached)
+        {
+            return JsonUtils::jsonToRecipes(*cached);
+        }
+
+        auto ptrs = recipeRepo.getAll();
+
+        std::vector<Recipe> result;
         for (auto &p : ptrs)
             result.push_back(*p);
+
+        cache.set("recipes:all", JsonUtils::recipesToJson(result), 60);
 
         return result;
     }
@@ -96,6 +110,9 @@ public:
                 return ing;
             }
         }
+
+        cache.del("recipes:all");
+        cache.del("recipe:" + recipe_id + ":ingredients");
 
         return i;
     }

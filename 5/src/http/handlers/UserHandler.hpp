@@ -4,14 +4,18 @@
 #include "../../service/UserService.hpp"
 #include "../../service/RecipeService.hpp"
 
+#include "../../cache/CacheService.hpp"
+
 class UserHandler : public BaseHandler
 {
 private:
     UserService &service;
     RecipeService &recipeService;
+    CacheService &cache;
 
 public:
-    UserHandler(UserService &s, RecipeService &r) : service(s), recipeService(r) {}
+    UserHandler(UserService &s, RecipeService &r, CacheService &c)
+        : service(s), recipeService(r), cache(c) {}
 
 protected:
     void handle(Poco::Net::HTTPServerRequest &req,

@@ -5,15 +5,18 @@
 
 #include "../../auth/JwtMiddleware.hpp"
 
+#include "../../cache/CacheService.hpp"
+
 class IngredientHandler : public BaseHandler
 {
 private:
     RecipeService &service;
     JwtMiddleware &auth;
+    CacheService &cache;
 
 public:
-    IngredientHandler(RecipeService &s, JwtMiddleware &a)
-        : service(s), auth(a) {}
+    IngredientHandler(RecipeService &s, JwtMiddleware &a, CacheService &c)
+        : service(s), auth(a), cache(c) {}
 
 protected:
     void handle(Poco::Net::HTTPServerRequest &req,

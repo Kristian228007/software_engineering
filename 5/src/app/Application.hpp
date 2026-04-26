@@ -10,6 +10,9 @@
 #include "../service/RecipeService.hpp"
 #include "../service/AuthService.hpp"
 
+#include "../cache/CacheService.hpp"
+#include "../cache/RateLimiter.hpp"
+
 #include "../auth/JwtMiddleware.hpp"
 
 #include "../http/Router.hpp"
@@ -34,14 +37,17 @@ protected:
         UserRepository userRepo(connectionString);
         RecipeRepository recipeRepo(connectionString);
 
+        CacheService cache;
+        RateLimiter rateLimiter;
+
         UserService userService(userRepo);
-        RecipeService recipeService(recipeRepo, userRepo);
+        RecipeService recipeService(recipeRepo, userRepo, cache);
         AuthService authService(userRepo);
         JwtMiddleware jwt(authService);
 
         Poco::Net::ServerSocket socket(8080);
         Poco::Net::HTTPServer server(
-            new Router(userService, recipeService, authService, jwt),
+            new Router(userService, recipeService, authService, jwt, cache, rateLimiter),
             socket,
             new Poco::Net::HTTPServerParams);
 

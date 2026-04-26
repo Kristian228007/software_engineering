@@ -5,15 +5,21 @@
 
 #include "../../auth/JwtMiddleware.hpp"
 
+#include "../../cache/RateLimiter.hpp"
+#include "../../cache/CacheService.hpp"
+
 class RecipeHandler : public BaseHandler
 {
 private:
     RecipeService &service;
     JwtMiddleware &auth;
+    CacheService &cache;
+    RateLimiter &rateLimiter;
 
 public:
-    RecipeHandler(RecipeService &s, JwtMiddleware &a)
-        : service(s), auth(a) {}
+    RecipeHandler(RecipeService &s, JwtMiddleware &a,
+                  CacheService &c, RateLimiter &rl)
+        : service(s), auth(a), cache(c), rateLimiter(rl) {}
 
 protected:
     void handle(Poco::Net::HTTPServerRequest &req,
@@ -47,6 +53,17 @@ protected:
 
         if (req.getMethod() == "GET")
         {
+            int remaining;
+
+            if (!rateLimiter.allow("global:recipes", remaining))
+            {
+                res.setStatus(Poco::Net::HTTPResponse::HTTP_TOO_MANY_REQUESTS);
+                return;
+            }
+
+            res.set("X-RateLimit-Limit", "100");
+            res.set("X-RateLimit-Remaining", std::to_string(remaining));
+
             auto recipes = service.listRecipes();
             Poco::JSON::Array arr;
 
