@@ -75,4 +75,47 @@ public:
 
         return result;
     }
+
+    static std::string ingredientsToJson(const std::vector<Ingredient> &ingredients)
+    {
+        Poco::JSON::Array arr;
+
+        for (const auto &i : ingredients)
+        {
+            Poco::JSON::Object obj;
+            obj.set("id", i.id);
+            obj.set("name", i.name);
+            obj.set("amount", i.amount);
+            obj.set("unit", i.unit);
+
+            arr.add(obj);
+        }
+
+        std::stringstream ss;
+        arr.stringify(ss);
+        return ss.str();
+    }
+
+    static std::vector<Ingredient> jsonToIngredients(const std::string &json)
+    {
+        std::vector<Ingredient> result;
+
+        Poco::JSON::Parser parser;
+        auto arr = parser.parse(json).extract<Poco::JSON::Array::Ptr>();
+
+        for (size_t i = 0; i < arr->size(); ++i)
+        {
+            auto obj = arr->getObject(i);
+
+            Ingredient ing;
+            ing.id = obj->getValue<std::string>("id");
+            ing.name = obj->getValue<std::string>("name");
+            ing.amount = obj->getValue<std::string>("amount");
+            ing.unit = obj->getValue<std::string>("unit");
+
+            result.push_back(ing);
+        }
+
+        return result;
+    }
 };

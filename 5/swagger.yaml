@@ -130,6 +130,12 @@ paths:
                                 type: array
                                 items:
                                     $ref: "#/components/schemas/Recipe"
+                "429":
+                    description: Too Many Requests
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TooManyRequestsErrorResponse"
         post:
             tags:
                 - Recipes
@@ -189,6 +195,12 @@ paths:
                         application/json:
                             schema:
                                 $ref: "#/components/schemas/NotFoundErrorResponse"
+                "429":
+                    description: Too Many Requests
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/TooManyRequestsErrorResponse"
         post:
             tags:
                 - Ingredients
@@ -351,6 +363,12 @@ components:
                 error:
                     type: string
                     example: "Conflict"
+        TooManyRequestsErrorResponse:
+            type: object
+            properties:
+                error:
+                    type: string
+                    example: "Too Many Requests"
         NotFoundErrorResponse:
             type: object
             properties:

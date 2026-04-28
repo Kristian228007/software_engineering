@@ -121,8 +121,22 @@ public:
     {
         auto recipe = recipeRepo.findById(recipe_id);
         if (!recipe)
+        {
             throw NotFoundException("Recipe not found");
+        }
 
-        return recipeRepo.findIngredientsByRecipeId(recipe_id);
+        std::string cacheKey = "recipe:" + recipe_id + ":ingredients";
+
+        auto cached = cache.get(cacheKey);
+        if (cached)
+        {
+            return JsonUtils::jsonToIngredients(*cached);
+        }
+
+        auto ingredients = recipeRepo.findIngredientsByRecipeId(recipe_id);
+
+        cache.set(cacheKey, JsonUtils::ingredientsToJson(ingredients), 60);
+
+        return ingredients;
     }
 };

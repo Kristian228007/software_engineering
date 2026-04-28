@@ -54,15 +54,17 @@ protected:
         if (req.getMethod() == "GET")
         {
             int remaining;
+            bool allowed = rateLimiter.allow("global:recipes", remaining);
 
-            if (!rateLimiter.allow("global:recipes", remaining))
+            res.set("X-RateLimit-Limit", "100");
+            res.set("X-RateLimit-Remaining", std::to_string(remaining));
+            res.set("X-RateLimit-Reset", "60");
+
+            if (!allowed)
             {
                 res.setStatus(Poco::Net::HTTPResponse::HTTP_TOO_MANY_REQUESTS);
                 return;
             }
-
-            res.set("X-RateLimit-Limit", "100");
-            res.set("X-RateLimit-Remaining", std::to_string(remaining));
 
             auto recipes = service.listRecipes();
             Poco::JSON::Array arr;

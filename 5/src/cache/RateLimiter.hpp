@@ -14,26 +14,20 @@ public:
 
     bool allow(const std::string &key, int &remaining)
     {
-        // INCR command as Array
         Poco::Redis::Array incrCmd;
         incrCmd.add("INCR");
         incrCmd.add(key);
 
-        // Execute and get result as BulkString, then convert to int
-        Poco::Redis::BulkString result = client.execute<Poco::Redis::BulkString>(incrCmd);
-        int count = std::stoi(result.value());
+        Poco::Int64 count = client.execute<Poco::Int64>(incrCmd);
 
-        // If first time, set expiration
-        if (count == 1)
-        {
-            Poco::Redis::Array expireCmd;
-            expireCmd.add("EXPIRE");
-            expireCmd.add(key);
-            expireCmd.add("60");
-            client.execute<Poco::Redis::BulkString>(expireCmd);
-        }
+        Poco::Redis::Array expireCmd;
+        expireCmd.add("EXPIRE");
+        expireCmd.add(key);
+        expireCmd.add("60");
+        client.execute<void>(expireCmd);
 
         remaining = limit - count;
+
         return count <= limit;
     }
 };

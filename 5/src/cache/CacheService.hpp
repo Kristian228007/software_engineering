@@ -31,13 +31,13 @@ public:
         setCmd.add("SET");
         setCmd.add(key);
         setCmd.add(value);
-        client.execute<Poco::Redis::BulkString>(setCmd);
+        client.execute<void>(setCmd);
 
         Poco::Redis::Array expireCmd;
         expireCmd.add("EXPIRE");
         expireCmd.add(key);
         expireCmd.add(std::to_string(ttl));
-        client.execute<Poco::Redis::BulkString>(expireCmd);
+        client.execute<void>(expireCmd);
     }
 
     void del(const std::string &key)
@@ -45,6 +45,6 @@ public:
         Poco::Redis::Array delCmd;
         delCmd.add("DEL");
         delCmd.add(key);
-        client.execute<Poco::Redis::BulkString>(delCmd);
+        client.execute<void>(delCmd);
     }
 };

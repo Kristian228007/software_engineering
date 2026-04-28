@@ -40,7 +40,7 @@ public:
         if (uri.find("/api/v1/recipes/") == 0 &&
             uri.size() >= std::string("/ingredients").size() &&
             uri.rfind("/ingredients") == uri.size() - std::string("/ingredients").size())
-            return new IngredientHandler(recipeService, jwt, cache);
+            return new IngredientHandler(recipeService, jwt, cache, rateLimiter);
 
         if (uri.find("/api/v1/recipes") == 0)
             return new RecipeHandler(recipeService, jwt, cache, rateLimiter);

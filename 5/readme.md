@@ -11,7 +11,7 @@ REST API сервис для управления рецептами.
 - JWT
 - Docker
 - PostgreSQL
-- Redis
+- Redis (кеширование + rate limiting)
 
 ## Запуск
 
