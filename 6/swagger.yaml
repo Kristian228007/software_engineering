@@ -1,0 +1,394 @@
+openapi: 3.0.0
+info:
+    title: Recipe Management API
+    version: 1.0.0
+
+servers:
+    - url: http://localhost:8080
+
+paths:
+    /api/v1/users:
+        get:
+            tags:
+                - Users
+            summary: Get all users
+            responses:
+                "200":
+                    description: Array of users
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/User"
+        post:
+            tags:
+                - Users
+            summary: Create user
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/CreateUser"
+            responses:
+                "201":
+                    description: User created
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UserCreatedResponse"
+                "409":
+                    description: User already exists
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ConflictErrorResponse"
+    /api/v1/users/{login}:
+        get:
+            tags:
+                - Users
+            summary: Get user by login
+            parameters:
+                - name: login
+                  in: path
+                  required: true
+                  description: User login
+                  schema:
+                      type: string
+                      example: "ivan"
+            responses:
+                "200":
+                    description: User found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/User"
+                "404":
+                    description: User not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/NotFoundErrorResponse"
+    /api/v1/users/{userId}/recipes:
+        get:
+            tags:
+                - Recipes
+            summary: Get recipes created by user
+            parameters:
+                - name: userId
+                  in: path
+                  required: true
+                  description: User ID
+                  schema:
+                      type: string
+                      example: "6f1c7d2a-8f5b-4f01-9d9a-123456789001"
+            responses:
+                "200":
+                    description: List of recipes created by the user
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Recipe"
+    /api/v1/auth/login:
+        post:
+            tags:
+                - Auth
+            summary: Login
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/Login"
+            responses:
+                "200":
+                    description: JWT token
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/AuthResponse"
+                "401":
+                    description: Invalid credentials
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UnauthorizedErrorResponse"
+    /api/v1/recipes:
+        get:
+            tags:
+                - Recipes
+            summary: List recipes
+            responses:
+                "200":
+                    description: List of recipes
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Recipe"
+        post:
+            tags:
+                - Recipes
+            summary: Create recipe
+            security:
+                - bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/CreateRecipe"
+            responses:
+                "201":
+                    description: Recipe created
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Recipe"
+                "401":
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UnauthorizedErrorResponse"
+                "409":
+                    description: Recipe already exists
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ConflictErrorResponse"
+    /api/v1/recipes/{id}/ingredients:
+        get:
+            tags:
+                - Ingredients
+            summary: Get ingredients
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: Recipe ID
+                  schema:
+                      type: string
+                      example: "8a2b9c10-1111-4d55-9999-123456789001"
+            responses:
+                "200":
+                    description: Ingredient list
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: "#/components/schemas/Ingredient"
+                "404":
+                    description: Recipe not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/NotFoundErrorResponse"
+        post:
+            tags:
+                - Ingredients
+            summary: Add ingredient
+            security:
+                - bearerAuth: []
+            parameters:
+                - name: id
+                  in: path
+                  required: true
+                  description: Recipe ID
+                  schema:
+                      type: string
+                      example: "8a2b9c10-1111-4d55-9999-123456789001"
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            $ref: "#/components/schemas/AddIngredient"
+            responses:
+                "201":
+                    description: Ingredient added
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/Ingredient"
+                "401":
+                    description: Unauthorized
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/UnauthorizedErrorResponse"
+                "404":
+                    description: Recipe not found
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/NotFoundErrorResponse"
+                "409":
+                    description: Ingredient already exists
+                    content:
+                        application/json:
+                            schema:
+                                $ref: "#/components/schemas/ConflictErrorResponse"
+components:
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT
+
+    schemas:
+        CreateUser:
+            type: object
+            required:
+                - login
+                - password
+                - firstName
+                - lastName
+            properties:
+                login:
+                    type: string
+                    example: "ivan"
+                password:
+                    type: string
+                    example: "qwerty123"
+                firstName:
+                    type: string
+                    example: "Ivan"
+                lastName:
+                    type: string
+                    example: "Petrov"
+
+        Login:
+            type: object
+            required:
+                - login
+                - password
+            properties:
+                login:
+                    type: string
+                    example: "ivan"
+                password:
+                    type: string
+                    example: "qwerty123"
+
+        CreateRecipe:
+            type: object
+            required:
+                - title
+                - description
+            properties:
+                title:
+                    type: string
+                    example: "Pasta Carbonara"
+                description:
+                    type: string
+                    example: "Classic Italian pasta with eggs and bacon"
+
+        AddIngredient:
+            type: object
+            required:
+                - name
+                - amount
+                - unit
+            properties:
+                name:
+                    type: string
+                    example: "Spaghetti"
+                amount:
+                    type: string
+                    example: "200"
+                unit:
+                    type: string
+                    example: "g"
+
+        User:
+            type: object
+            properties:
+                id:
+                    type: string
+                    example: "6f1c7d2a-8f5b-4f01-9d9a-123456789001"
+                login:
+                    type: string
+                    example: "ivan"
+                firstName:
+                    type: string
+                    example: "Ivan"
+                lastName:
+                    type: string
+                    example: "Petrov"
+
+        UserCreatedResponse:
+            type: object
+            properties:
+                id:
+                    type: string
+                    example: "6f1c7d2a-8f5b-4f01-9d9a-123456789001"
+                login:
+                    type: string
+                    example: "ivan"
+
+        AuthResponse:
+            type: object
+            properties:
+                token:
+                    type: string
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.example.signature"
+
+        UnauthorizedErrorResponse:
+            type: object
+            properties:
+                error:
+                    type: string
+                    example: "Unauthorized"
+        ConflictErrorResponse:
+            type: object
+            properties:
+                error:
+                    type: string
+                    example: "Conflict"
+        NotFoundErrorResponse:
+            type: object
+            properties:
+                error:
+                    type: string
+                    example: "Not found"
+        Ingredient:
+            type: object
+            properties:
+                id:
+                    type: string
+                    example: "6f1c7d2a-8f5b-4f01-9d9a-123456789001"
+                name:
+                    type: string
+                    example: "Spaghetti"
+                amount:
+                    type: string
+                    example: "200"
+                unit:
+                    type: string
+                    example: "g"
+
+        Recipe:
+            type: object
+            properties:
+                id:
+                    type: string
+                    example: "8a2b9c10-1111-4d55-9999-123456789001"
+                title:
+                    type: string
+                    example: "Pasta Carbonara"
+                description:
+                    type: string
+                    example: "Classic Italian pasta with eggs and bacon"
+                authorId:
+                    type: string
+                    example: "6f1c7d2a-8f5b-4f01-9d9a-123456789001"
+                ingredients:
+                    type: array
+                    items:
+                        $ref: "#/components/schemas/Ingredient"
