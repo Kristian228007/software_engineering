@@ -4,7 +4,7 @@ project(RecipeAPI)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Poco REQUIRED Foundation Net Util JSON Data DataPostgreSQL JWT)
+find_package(Poco REQUIRED Foundation Net Util JSON Data DataPostgreSQL JWT Redis)
 
 include_directories(${POCO_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/src)
@@ -24,5 +24,6 @@ target_link_libraries(server
     PocoData
     PocoDataPostgreSQL
     PocoJWT
+    PocoRedis
     pq
 )

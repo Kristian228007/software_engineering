@@ -16,10 +16,14 @@ private:
     RecipeService &recipeService;
     AuthService &authService;
     JwtMiddleware &jwt;
+    CacheService &cache;
+    RateLimiter &rateLimiter;
 
 public:
-    Router(UserService &u, RecipeService &r, AuthService &a, JwtMiddleware &j)
-        : userService(u), recipeService(r), authService(a), jwt(j) {}
+    Router(UserService &u, RecipeService &r, AuthService &a, JwtMiddleware &j,
+           CacheService &c, RateLimiter &rl)
+        : userService(u), recipeService(r), authService(a), jwt(j),
+          cache(c), rateLimiter(rl) {}
 
     Poco::Net::HTTPRequestHandler *createRequestHandler(
         const Poco::Net::HTTPServerRequest &request) override
@@ -31,15 +35,15 @@ public:
             return new AuthHandler(authService);
 
         if (uri.find("/api/v1/users") == 0)
-            return new UserHandler(userService, recipeService);
+            return new UserHandler(userService, recipeService, cache);
 
         if (uri.find("/api/v1/recipes/") == 0 &&
             uri.size() >= std::string("/ingredients").size() &&
             uri.rfind("/ingredients") == uri.size() - std::string("/ingredients").size())
-            return new IngredientHandler(recipeService, jwt);
+            return new IngredientHandler(recipeService, jwt, cache, rateLimiter);
 
         if (uri.find("/api/v1/recipes") == 0)
-            return new RecipeHandler(recipeService, jwt);
+            return new RecipeHandler(recipeService, jwt, cache, rateLimiter);
 
         if (uri == "/swagger")
             return new SwaggerHandler();
