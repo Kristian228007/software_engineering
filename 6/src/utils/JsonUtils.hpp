@@ -41,6 +41,32 @@ public:
         return ss.str();
     }
 
+    static std::string recipeToJson(const Recipe &recipe)
+    {
+        Poco::JSON::Object obj;
+        obj.set("id", recipe.id);
+        obj.set("title", recipe.title);
+        obj.set("description", recipe.description);
+        obj.set("authorId", recipe.authorId);
+
+        Poco::JSON::Array ingArr;
+        for (const auto &i : recipe.ingredients)
+        {
+            Poco::JSON::Object ing;
+            ing.set("id", i.id);
+            ing.set("name", i.name);
+            ing.set("amount", i.amount);
+            ing.set("unit", i.unit);
+            ingArr.add(ing);
+        }
+
+        obj.set("ingredients", ingArr);
+
+        std::stringstream ss;
+        obj.stringify(ss);
+        return ss.str();
+    }
+
     static std::vector<Recipe> jsonToRecipes(const std::string &json)
     {
         std::vector<Recipe> result;
@@ -59,6 +85,40 @@ public:
             r.authorId = obj->getValue<std::string>("authorId");
 
             auto ingArr = obj->getArray("ingredients");
+            if (ingArr)
+            {
+                for (size_t j = 0; j < ingArr->size(); ++j)
+                {
+                    auto ingObj = ingArr->getObject(j);
+                    Ingredient ing;
+                    ing.id = ingObj->getValue<std::string>("id");
+                    ing.name = ingObj->getValue<std::string>("name");
+                    ing.amount = ingObj->getValue<std::string>("amount");
+                    ing.unit = ingObj->getValue<std::string>("unit");
+                    r.ingredients.push_back(ing);
+                }
+            }
+
+            result.push_back(r);
+        }
+
+        return result;
+    }
+
+    static Recipe jsonToRecipe(const std::string &json)
+    {
+        Poco::JSON::Parser parser;
+        auto obj = parser.parse(json).extract<Poco::JSON::Object::Ptr>();
+
+        Recipe r;
+        r.id = obj->getValue<std::string>("id");
+        r.title = obj->getValue<std::string>("title");
+        r.description = obj->getValue<std::string>("description");
+        r.authorId = obj->getValue<std::string>("authorId");
+
+        auto ingArr = obj->getArray("ingredients");
+        if (ingArr)
+        {
             for (size_t j = 0; j < ingArr->size(); ++j)
             {
                 auto ingObj = ingArr->getObject(j);
@@ -69,11 +129,9 @@ public:
                 ing.unit = ingObj->getValue<std::string>("unit");
                 r.ingredients.push_back(ing);
             }
-
-            result.push_back(r);
         }
 
-        return result;
+        return r;
     }
 
     static std::string ingredientsToJson(const std::vector<Ingredient> &ingredients)

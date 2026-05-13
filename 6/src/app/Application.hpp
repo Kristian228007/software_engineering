@@ -16,6 +16,7 @@
 #include "../auth/JwtMiddleware.hpp"
 
 #include "../http/Router.hpp"
+#include "../kafka/RecipeProducer.hpp"
 
 class ServerApplication : public Poco::Util::ServerApplication
 {
@@ -44,6 +45,10 @@ protected:
         RecipeService recipeService(recipeRepo, userRepo, cache);
         AuthService authService(userRepo);
         JwtMiddleware jwt(authService);
+
+        std::string kafkaBrokers = Poco::Environment::get("KAFKA_BROKERS", "localhost:9092");
+        auto producer = std::make_shared<RecipeProducer>(kafkaBrokers, "recipe_events");
+        recipeService.setProducer(producer);
 
         Poco::Net::ServerSocket socket(8080);
         Poco::Net::HTTPServer server(
